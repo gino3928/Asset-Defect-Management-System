@@ -67,6 +67,8 @@ The AWS environment is deployed in `us-east-2` (Ohio). Lambda execution logs are
 | Operational visibility | CloudWatch Lambda logs (30-day retention), stored proposal outcomes, event records and DLQs support troubleshooting. |
 
 ## End-to-end defect workflow
+<img width="2502" height="1144" alt="image" src="https://github.com/user-attachments/assets/f96fd26f-efad-4aff-8d42-ca5a1a34971e" />
+<img width="2495" height="1160" alt="image" src="https://github.com/user-attachments/assets/14e85e65-bfa3-4446-be4e-12df3a4951e9" />
 
 Example Slack command:
 
