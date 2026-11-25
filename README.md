@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Asset Approval & Defect Management
 
 **Event-driven AWS infrastructure for secure, human-approved operational workflows in Slack.**
@@ -272,3 +273,6 @@ Further hardening would include stable request-level idempotency keys for SQS re
 ---
 
 **Technical stack:** AWS API Gateway · Lambda · SQS · DynamoDB · Secrets Manager · IAM · S3 · CloudWatch · Bedrock AgentCore · Terraform · Python · Slack API · Jira REST API · Qwen
+=======
+# Asset-Defect-Management-System
+>>>>>>> origin/main
