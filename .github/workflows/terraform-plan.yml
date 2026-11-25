@@ -1,0 +1,109 @@
+name: Terraform OIDC Plan Test
+
+on:
+  workflow_dispatch:
+
+# Allow GitHub Actions to read the repository and request an OIDC token.
+permissions:
+  contents: read
+  id-token: write
+
+# Prevent concurrent Terraform runs from using the same state simultaneously.
+concurrency:
+  group: asset-defect-terraform-dev
+  cancel-in-progress: false
+
+jobs:
+  terraform-plan:
+    name: Validate AWS access and create plan
+    runs-on: ubuntu-latest
+
+    env:
+      TF_IN_AUTOMATION: "true"
+      AWS_REGION: us-east-2
+
+    steps:
+      # Download the repository contents to the GitHub runner.
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Install the required Terraform version.
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.2"
+
+      # Display selected non-sensitive claims from GitHub's OIDC token.
+      # Retain this step temporarily while testing authentication.
+      - name: Show non-sensitive OIDC claims
+        shell: bash
+        run: |
+          RESPONSE="$(curl --fail --silent --show-error \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com")"
+
+          TOKEN="$(printf '%s' "$RESPONSE" | \
+            python -c 'import json,sys; print(json.load(sys.stdin)["value"])')"
+
+          OIDC_TOKEN="$TOKEN" python - <<'PY'
+          import base64
+          import json
+          import os
+
+          payload = os.environ["OIDC_TOKEN"].split(".")[1]
+          payload += "=" * (-len(payload) % 4)
+          claims = json.loads(base64.urlsafe_b64decode(payload))
+
+          print("aud:", claims.get("aud"))
+          print("sub:", claims.get("sub"))
+          print("repository:", claims.get("repository"))
+          print("ref:", claims.get("ref"))
+          PY
+
+      # Exchange the GitHub OIDC token for temporary AWS credentials.
+      # The role ARN is obtained from the AWS_ROLE_ARN repository variable.
+      - name: Assume the AWS Terraform role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: us-east-2
+          audience: sts.amazonaws.com
+          role-session-name: AssetDefectTerraformPlan
+          role-skip-session-tagging: true
+
+      # Confirm that GitHub successfully assumed the intended AWS role.
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      # Create directories required by the Terraform configuration.
+      - name: Prepare generated-file directories
+        run: mkdir -p environments/dev/packages
+
+      # Generate the backend configuration without committing account-specific
+      # state configuration to the repository.
+      - name: Create private backend configuration
+        shell: bash
+        run: |
+          printf 'bucket = "%s"\n' \
+            "${{ vars.TF_STATE_BUCKET }}" \
+            > environments/dev/backend.hcl
+
+      # Connect Terraform to the remote S3 backend.
+      - name: Initialize the S3 backend
+        run: |
+          terraform -chdir=environments/dev init \
+            -input=false \
+            -backend-config=backend.hcl
+
+      # Check the Terraform configuration for syntax and structural errors.
+      - name: Validate Terraform
+        run: terraform -chdir=environments/dev validate
+
+      # Produce a plan without applying infrastructure changes.
+      - name: Create a non-destructive Terraform plan
+        run: |
+          terraform -chdir=environments/dev plan \
+            -input=false \
+            -lock-timeout=5m \
+            -var="slack_workspace_id=${{ vars.SLACK_WORKSPACE_ID }}" \
+            -out=tfplan

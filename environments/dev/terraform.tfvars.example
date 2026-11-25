@@ -1,0 +1,13 @@
+aws_region         = "us-east-2"
+project_name       = "asset-defect"
+environment        = "dev"
+slack_workspace_id = "T0123456789"
+
+# The defect review harness is created by Terraform.
+defect_agentcore_model_id = "amazon.nova-lite-v1:0"
+
+# Keep false for staged rollout: if review fails, a human still reviews the proposal.
+defect_agentcore_required = false
+
+# Add this only after the Asset AgentCore harness exists.
+asset_agentcore_harness_arn = ""

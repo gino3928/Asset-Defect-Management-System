@@ -1,0 +1,3 @@
+# Copy this file to backend.hcl and use the bucket output from bootstrap/.
+bucket = "asset-defect-management-tfstate-ACCOUNT_ID-us-east-2"
+
