@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Asset Approval & Defect Management
 
 **Event-driven AWS infrastructure for secure, human-approved operational workflows in Slack.**
