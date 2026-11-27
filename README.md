@@ -49,7 +49,7 @@ flowchart TD
     TF["Terraform"] -.-> B["Bedrock AgentCore harness: provisioned alternative"]
 ```
 
-The AWS environment is deployed in `us-east-2` (Ohio). Lambda execution logs are collected in CloudWatch. The Qwen endpoint runs outside the AWS stack and is a separate integration dependency. The AgentCore harness is provisioned by Terraform but is not the model invocation path in the current Python worker.
+The AWS environment is deployed in `us-east-1` (N-Virginia). Lambda execution logs are collected in CloudWatch. The Qwen endpoint runs outside the AWS stack and is a separate integration dependency. The AgentCore harness is provisioned by Terraform but is not the model invocation path in the current Python worker.
 
 ## Engineering problems solved
 
